@@ -1,4 +1,4 @@
-from tkinter import *
+from tkinter import Tk, Scale, Label, Button, Toplevel, Entry
 from tkinter import messagebox
 from tkinter.ttk import Frame, Button
 from socket import *
@@ -12,7 +12,6 @@ settings = YamlLoader().load()
 
 
 class Controller():
-
     # The number of rows and columns of the all menus
     MENU_ROWS = 9
     MENU_COLUMNS = 3
@@ -252,7 +251,6 @@ class Controller():
 
     def game_window_on_quit(self):
         # When the game window closes, send a "leave game" message to the server and clear the game
-        print("window on quit")
         self.conn.send(MessageLeaveGame(self.idnum).pack())
         self.clear_game()
 

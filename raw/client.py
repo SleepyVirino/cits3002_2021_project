@@ -17,26 +17,18 @@ import socket
 import sys
 import threading
 
-from yamlLoader import YamlLoader
-settings = YamlLoader().load()
-
 
 
 
 class Application(Frame):
 
-    # client设置
-    TILE_PX = settings['pixel']['tile']  # pixels
-    BORDER_PX = settings['pixel']['border']  # pixels
-    HAND_SPACING_PX = settings['pixel']['hand_space']  # pixels
 
-
-    # client指定
+    TILE_PX = 80 # pixels
+    BORDER_PX = 50  # pixels
+    HAND_SPACING_PX = 40  # pixels
     BOARD_WIDTH = tiles.BOARD_WIDTH
     BOARD_HEIGHT = tiles.BOARD_HEIGHT
     HAND_SIZE = tiles.HAND_SIZE
-
-    # 计算得出
     BOARD_WIDTH_PX = TILE_PX * BOARD_WIDTH
     BOARD_HEIGHT_PX = TILE_PX * BOARD_HEIGHT
     HAND_WIDTH_PX = TILE_PX * HAND_SIZE + HAND_SPACING_PX * (HAND_SIZE - 1)

@@ -1,0 +1,25 @@
+pixel:
+    tile: 80
+    border: 50
+    hand_space: 10
+
+root:
+    width: 600
+    height: 600
+    resize: False
+
+server:
+    ip: localhost
+    port: 30020
+
+player_color:
+    - "#FF0000"
+    - "#00FF00"
+    - "#0000FF"
+    - "FFFF00"
+    - "FF00FF"
+    - "00FFFF"
+    - "800080"
+    - "FFA500"
+player:
+    name: PLAYER1

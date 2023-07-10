@@ -1,13 +1,8 @@
+
 from random import randrange
 
 from tile import ALL_TILES, CONNECTION_NEIGHBOURS
 from protocol import MessageMoveToken
-
-
-
-
-# PLAYER_COLOURS = settings['player']['color']
-
 
 class Board:
     """Stores the state of the board for a single game, and implements much of the
@@ -185,18 +180,11 @@ class Board:
 
         return positionupdates, eliminated
 
-    #
-    # METHODS BELOW HERE ARE PRIVATE OR ONLY NEEDED BY THE CLIENT
-    # -----------------------------------------------------------
-
     def tile_index(self, x: int, y: int):
         return x + y * self.width
 
     def update_player_position(self, idnum, x: int, y: int, position: int):
         self.playerpositions[idnum] = (x, y, position)
-
-
-
 
 
 def get_random_tileid():

@@ -5,7 +5,7 @@ from protocol import GameState
 
 
 class Home():
-    def __init__(self, id,owner_id, border_width=5, border_height=5, hand_size=4, max_player=4):
+    def __init__(self, id, owner_id, border_width=5, border_height=5, hand_size=4, max_player=4):
         self.owner_id = owner_id
         self.border_width = border_width
         self.border_height = border_height
@@ -30,13 +30,14 @@ class Home():
             if leave_game_player in self.player_list_on_game:
                 self.player_list_on_game.remove(leave_game_player)
 
-    def update_left_player(self,eliminated_player_list):
+    def update_left_player(self, eliminated_player_list):
 
         for eliminated_player in eliminated_player_list:
             if eliminated_player not in self.eliminated_player_list:
                 self.eliminated_player_list.append(eliminated_player)
             if eliminated_player in self.left_player_list:
                 self.left_player_list.remove(eliminated_player)
+
     def update_order(self):
         if len(self.left_player_list) == 0:
             self.turn_round = {}
@@ -52,14 +53,13 @@ class Home():
                     next_player = self.turn_round[next_player]
                 self.turn_round[left_player] = next_player
 
-
     def init_game_state(self):
         self.running = True
         board = Board(self.border_width, self.border_height)
         self.board = board
         random.shuffle(self.player_list)
-        for i in range(len(self.player_list)-1):
-            self.turn_round[self.player_list[i]] = self.player_list[i+1]
+        for i in range(len(self.player_list) - 1):
+            self.turn_round[self.player_list[i]] = self.player_list[i + 1]
         else:
             self.turn_round[self.player_list[-1]] = self.player_list[0]
         self.current_player = self.player_list[0]
@@ -76,10 +76,7 @@ class Home():
         self.eliminated_player_list = []
         self.player_list_on_game = []
 
-
-
-
-    def append_player(self,player_idnum,player_name, conn=None):
+    def append_player(self, player_idnum, player_name, conn=None):
         self.player_names[player_idnum] = player_name
         self.player_list.append(player_idnum)
         for i in range(self.max_player):
@@ -88,8 +85,7 @@ class Home():
                 break
         self.conns[player_idnum] = conn
 
-    def delete_player(self,player_idnum):
-        print(self.player_list)
+    def delete_player(self, player_idnum):
         del self.player_names[player_idnum]
         self.player_list.remove(player_idnum)
         del self.player_nums[player_idnum]
@@ -108,6 +104,3 @@ class Home():
             return GameState.DOG_FALL
         else:
             return GameState.RUNNING
-
-
-

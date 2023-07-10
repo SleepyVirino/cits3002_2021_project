@@ -22,28 +22,25 @@ class MessageType(IntEnum):
     the reader can determine how to interpret the remaining bytes in the message.
     """
     WELCOME = 1
-    PLAYER_JOINED = 2
-    PLAYER_LEFT = 3
-    COUNTDOWN_STARTED = 4
-    GAME_START = 5
-    ADD_TILE_TO_HAND = 6
-    PLAYER_TURN = 7
-    PLACE_TILE = 8
-    MOVE_TOKEN = 9
-    PLAYER_ELIMINATED = 10
-    CREATE_HOME = 11
-    HOME_DETAILS = 12
-    LEAVE_HOME = 13
-    JOIN_HOME = 14
-    HOME_NOT_FOUND = 15
-    HOME_FULL = 16
-    MATCH_HOME = 17
-    GAME_START_OK = 18
-    GAME_OVER = 19
-    LEAVE_GAME = 20
-    CLOSE_CONNECTION = 21
-    PLAYER_NOT_ENOUGH = 22
-    PLAYER_NOT_FOUND = 23
+    GAME_START = 2
+    ADD_TILE_TO_HAND = 3
+    PLAYER_TURN = 4
+    PLACE_TILE = 5
+    MOVE_TOKEN = 6
+    PLAYER_ELIMINATED = 7
+    CREATE_HOME = 8
+    HOME_DETAILS = 9
+    LEAVE_HOME = 10
+    JOIN_HOME = 11
+    HOME_NOT_FOUND = 12
+    HOME_FULL = 13
+    MATCH_HOME = 14
+    GAME_START_OK = 15
+    GAME_OVER = 16
+    LEAVE_GAME = 17
+    CLOSE_CONNECTION = 18
+    PLAYER_NOT_ENOUGH = 19
+    PLAYER_NOT_FOUND = 20
 
 
 class MessageWelcome():
@@ -69,73 +66,14 @@ class MessageWelcome():
         return f"Welcome to the game! your ID is {self.idnum}."
 
 
-class MessagePlayerJoined():
-    """Sent by the server to all clients, when a new client joins.
-    This indicates the name and (unique) idnum for the new client.
-    """
-
-    def __init__(self, name: str, idnum: int):
-        self.name = name
-        self.idnum = idnum
-
-    def pack(self):
-        return struct.pack('!HHH{}s'.format(len(self.name)),
-                           MessageType.PLAYER_JOINED, self.idnum,
-                           len(self.name), bytes(self.name, 'utf-8'))
-
-    @classmethod
-    def unpack(cls, bs: bytearray):
-        headerlen = struct.calcsize('!HHH')
-
-        if len(bs) >= headerlen:
-            _, idnum, namelen = struct.unpack_from('!HHH', bs, 0)
-            if len(bs) >= headerlen + namelen:
-                name, = struct.unpack_from('!{}s'.format(namelen), bs, headerlen)
-                return MessagePlayerJoined(name, idnum), headerlen + namelen
-
-        return None, 0
-
-    def __str__(self):
-        return f"Player {self.name} has joined the game!"
-
-
-class MessagePlayerLeft():
-    """Sent by the server to all remaining clients, when a client leaves."""
-
-    def __init__(self, idnum: int):
-        self.idnum = idnum
-
-    def pack(self):
-        return struct.pack('!HH', MessageType.PLAYER_LEFT, self.idnum)
-
-    @classmethod
-    def unpack(cls, bs: bytearray):
-        messagelen = struct.calcsize('!HH')
-
-        if len(bs) >= messagelen:
-            _, idnum = struct.unpack_from('!HH', bs, 0)
-            return cls(idnum), messagelen
-
-        return None, 0
-
-    def __str__(self):
-        return f"A player has left the game."
-
-
-class MessageCountdown():
-    """Sent by the server to all clients, when the countdown for a new game has
-    started.
-    """
-
-    def pack(self):
-        return struct.pack('!H', MessageType.COUNTDOWN_STARTED)
-
-
 class MessageGameStart():
     """Sent by the server to all clients, when a new game has started."""
 
     def pack(self):
         return struct.pack('!H', MessageType.GAME_START)
+
+    def __str__(self):
+        return "Game has started!"
 
 
 class MessageAddTileToHand():
@@ -218,7 +156,7 @@ class MessagePlaceTile():
         return None, 0
 
     def __str__(self):
-        return "A player placed his/her tile!"
+        return "Player {} has placed a tile at ({}, {})".format(self.idnum, self.x, self.y)
 
 
 class MessageMoveToken():
@@ -251,7 +189,7 @@ class MessageMoveToken():
         return None, 0
 
     def __str__(self):
-        return "Player has decided its starting position!"
+        return "Player {} has moved their token to ({}, {})".format(self.idnum, self.x, self.y)
 
 
 class MessagePlayerEliminated():
@@ -279,32 +217,44 @@ class MessagePlayerEliminated():
     def __str__(self):
         return "A player has been eliminated!"
 
+
 class MessageCreateHome():
-    def __init__(self,width,height,hand_size,max_players,player_idnum,player_name):
+    def __init__(self, width, height, hand_size, max_players, player_idnum, player_name):
         self.player_idnum = player_idnum
         self.player_name = player_name
         self.width = width
         self.height = height
         self.hand_size = hand_size
         self.max_players = max_players
+
     def pack(self):
         return struct.pack('!HHHHHHH{}s'.format(len(self.player_name)), MessageType.CREATE_HOME,
                            self.width, self.height, self.hand_size, self.max_players,
-                           self.player_idnum,len(self.player_name),self.player_name.encode('utf-8'))
+                           self.player_idnum, len(self.player_name), self.player_name.encode('utf-8'))
+
     @classmethod
     def unpack(cls, bs: bytearray):
         headerlen = struct.calcsize('!HHHHHHH')
 
         if len(bs) >= headerlen:
-            _, width, height, hand_size, max_players,player_idnum,name_len = struct.unpack_from('!HHHHHHH', bs, 0)
+            _, width, height, hand_size, max_players, player_idnum, name_len = struct.unpack_from('!HHHHHHH', bs, 0)
             if len(bs) >= headerlen + name_len:
                 player_name, = struct.unpack_from('!{}s'.format(name_len), bs, headerlen)
-                return cls(width, height, hand_size, max_players,player_idnum,player_name.decode('utf-8')), headerlen + name_len
-            
+                return cls(width, height, hand_size, max_players, player_idnum,
+                           player_name.decode('utf-8')), headerlen + name_len
+
         return None, 0
 
+    def __str__(self):
+        return "Player {} has created a new home with dimensions {}x{} and hand size {}.".format(self.player_idnum,
+                                                                                                 self.width,
+                                                                                                 self.height,
+                                                                                                 self.hand_size)
+
+
 class MessageHomeDetails():
-    def __init__(self,border_width,border_height,hand_size,max_player,id,owner_id, player_names,player_nums,player_list):
+    def __init__(self, border_width, border_height, hand_size, max_player, id, owner_id, player_names, player_nums,
+                 player_list):
         self.border_width = border_width
         self.border_height = border_height
         self.hand_size = hand_size
@@ -319,27 +269,34 @@ class MessageHomeDetails():
         self.player_list_str = json.dumps(self.player_list)
 
     def pack(self):
-        return struct.pack('!HHHHHHHHHH{}s{}s{}s'.format(len(self.player_names_str),len(self.player_nums_str),len(self.player_list_str)), MessageType.HOME_DETAILS,
+        return struct.pack('!HHHHHHHHHH{}s{}s{}s'.format(len(self.player_names_str), len(self.player_nums_str),
+                                                         len(self.player_list_str)), MessageType.HOME_DETAILS,
                            self.border_width, self.border_height, self.hand_size, self.max_player,
-                           self.id,self.owner_id,len(self.player_names_str),len(self.player_nums_str),len(self.player_list_str),
-                           self.player_names_str.encode('utf-8'),self.player_nums_str.encode('utf-8'),self.player_list_str.encode('utf-8'))
+                           self.id, self.owner_id, len(self.player_names_str), len(self.player_nums_str),
+                           len(self.player_list_str),
+                           self.player_names_str.encode('utf-8'), self.player_nums_str.encode('utf-8'),
+                           self.player_list_str.encode('utf-8'))
 
     @classmethod
     def unpack(cls, bs: bytearray):
         headerlen = struct.calcsize('!HHHHHHHHHH')
 
         if len(bs) >= headerlen:
-            _, border_width, border_height, hand_size, max_player,id,owner_id,name_len,num_len,list_len = struct.unpack_from('!HHHHHHHHHH', bs, 0)
+            _, border_width, border_height, hand_size, max_player, id, owner_id, name_len, num_len, list_len = struct.unpack_from(
+                '!HHHHHHHHHH', bs, 0)
             if len(bs) >= headerlen + name_len + num_len + list_len:
                 player_names, = struct.unpack_from('!{}s'.format(name_len), bs, headerlen)
                 player_nums, = struct.unpack_from('!{}s'.format(num_len), bs, headerlen + name_len)
                 player_list, = struct.unpack_from('!{}s'.format(list_len), bs, headerlen + name_len + num_len)
-                return cls(border_width, border_height, hand_size, max_player,id,owner_id,json.loads(player_names.decode('utf-8')),json.loads(player_nums.decode('utf-8')),json.loads(player_list.decode('utf-8'))), headerlen + name_len + num_len + list_len
+                return cls(border_width, border_height, hand_size, max_player, id, owner_id,
+                           json.loads(player_names.decode('utf-8')), json.loads(player_nums.decode('utf-8')),
+                           json.loads(player_list.decode('utf-8'))), headerlen + name_len + num_len + list_len
 
         return None, 0
 
+
 class MessageLeaveHome():
-    def __init__(self,player_id):
+    def __init__(self, player_id):
         self.player_id = player_id
 
     def pack(self):
@@ -355,30 +312,39 @@ class MessageLeaveHome():
 
         return None, 0
 
+    def __str__(self):
+        return "Player {} has left the home.".format(self.player_id)
+
+
 class MessageJoinHome():
-    def __init__(self,home_id,player_id,player_name):
+    def __init__(self, home_id, player_id, player_name):
         self.player_id = player_id
         self.home_id = home_id
         self.player_name = player_name
 
     def pack(self):
-        return struct.pack('!HHHH{}s'.format(len(self.player_name)), MessageType.JOIN_HOME, self.home_id, self.player_id,
-                           len(self.player_name),self.player_name.encode('utf-8'))
+        return struct.pack('!HHHH{}s'.format(len(self.player_name)), MessageType.JOIN_HOME, self.home_id,
+                           self.player_id,
+                           len(self.player_name), self.player_name.encode('utf-8'))
 
     @classmethod
     def unpack(cls, bs: bytearray):
         headerlen = struct.calcsize('!HHHH')
 
         if len(bs) >= headerlen:
-            _, home_id, player_id,name_len = struct.unpack_from('!HHHH', bs, 0)
+            _, home_id, player_id, name_len = struct.unpack_from('!HHHH', bs, 0)
             if len(bs) >= headerlen + name_len:
                 player_name, = struct.unpack_from('!{}s'.format(name_len), bs, headerlen)
-                return cls(home_id, player_id,player_name.decode('utf-8')), headerlen + name_len
+                return cls(home_id, player_id, player_name.decode('utf-8')), headerlen + name_len
 
         return None, 0
 
+    def __str__(self):
+        return "Player {} has joined the home {}.".format(self.player_id, self.home_id)
+
+
 class MessageHomeNotFound():
-    def __init__(self,home_id):
+    def __init__(self, home_id):
         self.home_id = home_id
 
     def pack(self):
@@ -394,8 +360,9 @@ class MessageHomeNotFound():
 
         return None, 0
 
+
 class MessageHomeFull():
-    def __init__(self,home_id):
+    def __init__(self, home_id):
         self.home_id = home_id
 
     def pack(self):
@@ -411,26 +378,31 @@ class MessageHomeFull():
 
         return None, 0
 
+
 class MessageMatchHome():
-    def __init__(self,player_id,player_name):
+    def __init__(self, player_id, player_name):
         self.player_id = player_id
         self.player_name = player_name
 
     def pack(self):
         return struct.pack('!HHH{}s'.format(len(self.player_name)), MessageType.MATCH_HOME, self.player_id,
-                           len(self.player_name),self.player_name.encode('utf-8'))
+                           len(self.player_name), self.player_name.encode('utf-8'))
 
     @classmethod
     def unpack(cls, bs: bytearray):
         headerlen = struct.calcsize('!HHH')
 
         if len(bs) >= headerlen:
-            _, player_id,name_len = struct.unpack_from('!HHH', bs, 0)
+            _, player_id, name_len = struct.unpack_from('!HHH', bs, 0)
             if len(bs) >= headerlen + name_len:
                 player_name, = struct.unpack_from('!{}s'.format(name_len), bs, headerlen)
-                return cls(player_id,player_name.decode('utf-8')), headerlen + name_len
+                return cls(player_id, player_name.decode('utf-8')), headerlen + name_len
 
         return None, 0
+
+    def __str__(self):
+        return "Player {} want to match the home.".format(self.player_id)
+
 
 class MessageGameStartOK():
     def __init__(self):
@@ -448,8 +420,12 @@ class MessageGameStartOK():
 
         return None, 0
 
+    def __str__(self):
+        return "A player has prepared the game."
+
+
 class MessageGameOver():
-    def __init__(self,game_state):
+    def __init__(self, game_state):
         self.game_state = game_state
 
     def pack(self):
@@ -465,8 +441,9 @@ class MessageGameOver():
 
         return None, 0
 
+
 class MessageLeaveGame():
-    def __init__(self,player_id):
+    def __init__(self, player_id):
         self.player_id = player_id
 
     def pack(self):
@@ -482,8 +459,12 @@ class MessageLeaveGame():
 
         return None, 0
 
+    def __str__(self):
+        return "Player {} has left the game.".format(self.player_id)
+
+
 class MessageCloseConnection():
-    def __init__(self,player_id):
+    def __init__(self, player_id):
         self.player_id = player_id
 
     def pack(self):
@@ -498,6 +479,10 @@ class MessageCloseConnection():
             return cls(player_id), messagelen
 
         return None, 0
+
+    def __str__(self):
+        return "Player {} has closed the connection.".format(self.player_id)
+
 
 class MessagePlayerNotEnough():
     def __init__(self):
@@ -533,31 +518,16 @@ def read_message_from_bytearray(bs: bytearray):
 
         if typeint == MessageType.WELCOME:
             msg, consumed = MessageWelcome.unpack(bs)
-
-        elif typeint == MessageType.PLAYER_JOINED:
-            msg, consumed = MessagePlayerJoined.unpack(bs)
-
-        elif typeint == MessageType.PLAYER_LEFT:
-            msg, consumed = MessagePlayerLeft.unpack(bs)
-
-        elif typeint == MessageType.COUNTDOWN_STARTED:
-            msg, consumed = MessageCountdown(), typesize
-
         elif typeint == MessageType.GAME_START:
             msg, consumed = MessageGameStart(), typesize
-
         elif typeint == MessageType.ADD_TILE_TO_HAND:
             msg, consumed = MessageAddTileToHand.unpack(bs)
-
         elif typeint == MessageType.PLAYER_TURN:
             msg, consumed = MessagePlayerTurn.unpack(bs)
-
         elif typeint == MessageType.PLACE_TILE:
             msg, consumed = MessagePlaceTile.unpack(bs)
-
         elif typeint == MessageType.MOVE_TOKEN:
             msg, consumed = MessageMoveToken.unpack(bs)
-
         elif typeint == MessageType.PLAYER_ELIMINATED:
             msg, consumed = MessagePlayerEliminated.unpack(bs)
         elif typeint == MessageType.CREATE_HOME:
@@ -585,7 +555,4 @@ def read_message_from_bytearray(bs: bytearray):
         elif typeint == MessageType.PLAYER_NOT_ENOUGH:
             msg, consumed = MessagePlayerNotEnough.unpack(bs)
 
-    # print("MESSAGE@@@@@@@@@", msg, type(msg))
     return msg, consumed
-
-

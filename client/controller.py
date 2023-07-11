@@ -251,7 +251,8 @@ class Controller():
 
     def game_window_on_quit(self):
         # When the game window closes, send a "leave game" message to the server and clear the game
-        self.conn.send(MessageLeaveGame(self.idnum).pack())
+        if self.game.game_runing:
+            self.conn.send(MessageLeaveGame(self.idnum).pack())
         self.clear_game()
 
     def clear_game(self):

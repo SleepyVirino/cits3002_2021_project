@@ -103,12 +103,17 @@ def communication_thread(controller):
                             controller.game.set_player_eliminated(msg.idnum)
 
                         elif isinstance(msg, protocol.MessageGameOver):
+
+                            controller.game.game_runing = False
                             # The msg.game_state < 0 means it must be a dogfall and otherwise means the id of
                             # someone who win
+                            print(controller.game.playernames)
                             if msg.game_state < 0:
                                 messagebox.showinfo("Game Over", "Game Over, Dog fall!")
                             else:
-                                messagebox.showinfo("Game Over", "Game Over, Player %d win!" % msg.game_state)
+                                messagebox.showinfo("Game Over", "Game Over, Player %s win!" % controller.home.player_names[msg.game_state])
+
+
                             # Controller clear the game
                             controller.clear_game()
 

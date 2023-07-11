@@ -73,6 +73,7 @@ class Game(Frame):
         self.bind('<<CloseConnection>>', lambda ev: self.on_quit())
 
         self.create_widgets()
+        self.game_runing = True
 
     def create_widgets(self):
         # create canvas and so on
@@ -289,7 +290,7 @@ class Game(Frame):
                     self.playerlist.remove(idnum)
                 else:
                     pass
-            self.playerlistvar.set(self.playernames[i] for i in self.playerlist)
+            self.playerlistvar.set([self.playernames[i] for i in self.playerlist])
 
             if not idnum in self.eliminatedlist:
                 self.eliminatedlist.append(idnum)
@@ -315,6 +316,8 @@ class Game(Frame):
         self.event_generate("<<RedrawHand>>")
 
     def on_quit(self):
-        self.sock.send(protocol.MessageLeaveGame(self.idnum).pack())
+
+        if self.game_runing:
+            self.sock.send(protocol.MessageLeaveGame(self.idnum).pack())
         if self.parent:
             self.parent.destroy()
